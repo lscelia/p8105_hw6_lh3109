@@ -1,0 +1,21 @@
+---
+title: "p8105_hw6_lh3109"
+output: github_document
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(modelr)
+library(mgcv)
+```
+
+# Problem 1
+
+
+
+
+# Prolem 2
+
+
+
+
