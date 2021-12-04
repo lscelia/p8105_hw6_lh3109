@@ -38,6 +38,9 @@ mult_fit = lm(bwt ~ . , data = bw_df)
 step(mult_fit, direction = 'backward')
 ```
 
+As shown in the output of the step() function, the selected predictors are babysex, bhead, delwt, fincome, gaweeks, mheight, mrace, parity, ppwt, and smoken.
+
+
 ### Fit model
 Apply the selected predictors to the model 
 ```{r}
@@ -61,11 +64,67 @@ bw_df %>%
        x = "Fitted Values",
        y = "Residuals")
 ```
+
 As shown in the plot, with fitted value below 2000 or above 4000, the residuals do not bounce randomly around the 0 line, suggesting that the data point in this range do not fall on the estimated regression line. This model is not optimal for data outside of the 2000-4000 range for fitted values and there are many outliers However, when fitted values are around 3000, many data points have residuals equals to 0 and they falls directly on the estimated regression line. 
 
 
-## Compare the model with two others
+## Compare the model with two others using CV
+
+### Set up training and test subsets
+```{r}
+set.seed(1)
+
+birthweight_cv = 
+  crossv_mc(bw_df, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)
+  )
+```
+
+### Fit the three models
+```{r, warning=FALSE}
+birthweight_cv = 
+  birthweight_cv %>% 
+  mutate(
+    mod = map(.x = train, 
+              ~lm(bwt ~ babysex + bhead + blength + delwt + fincome + gaweeks + 
+                mheight + mrace + parity + ppwt + smoken, 
+              data = .x)),
+    mod_effects = map(.x = train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+    mod_interactions = map(.x = train, ~lm(bwt ~ bhead + blength + babysex + 
+                                  bhead * blength + bhead * babysex + 
+                                  blength * babysex + bhead * blength * babysex, 
+                                data = .x))
+  ) %>% 
+  mutate(
+    #map 2 things, show double value
+    rmse_model_proposed = map2_dbl(.x = mod, .y = test, ~rmse(model = .x, data = .y )),
+    rmse_model_main_effects = map2_dbl(.x = mod_effects, .y = test, ~rmse(model = .x, data = .y )),
+    rmse_model_all_interactions = map2_dbl(.x = mod_interactions, .y = test, ~rmse(model = .x, data = .y ))
+  )
+```
+
+### Look at the outputs
+```{r}
+birthweight_cv %>% 
+  select(.id, starts_with("rmse")) %>% 
+  pivot_longer(
+    rmse_model_proposed:rmse_model_all_interactions,
+    names_to = "model",
+    values_to = "rmse",
+    names_prefix = "rmse_model_"
+  ) %>% 
+  ggplot(aes(x = model, y = rmse)) +
+  geom_boxplot() +
+    labs(title = "Model Comparisons",
+       x = "Fitted Values",
+       y = "Residuals")
+```
+As shown in the plot, the proposed model has much lower residual values than the model considering length at birth and gestational age as predictors(main_effects). It also has lower residual values than the model considering head circumference, length, sex and all interactions of these three variables as predictors(all_interactions). These indicates that the proposed model is better than the two model compared.
 
 
 # Prolem 2
+
+
 
