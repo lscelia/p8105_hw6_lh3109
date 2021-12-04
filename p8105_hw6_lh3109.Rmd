@@ -29,20 +29,21 @@ bw_df =
 ```
 This data set contains 4342 observations with 22 variables. It does not contains NA values.
 
-### Select predictors
+### Variable selection
 ```{r}
 #test model by considering all variables as predictors
-fit_test = lm(bwt ~ . , data = bw_df)
+mult_fit = lm(bwt ~ . , data = bw_df)
 
-#summry results and look for statistically significant predictors of bwt
-summary(fit_test)
+#using stepwise backward function to select predictors
+step(mult_fit, direction = 'backward')
 ```
 
 ### Fit model
-Consider birthweight as an outcome that depend on the predictors that are statistically significant
+Apply the selected predictors to the model 
 ```{r}
 #fit the model
-fit = lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + parity + smoken, data = bw_df)
+fit = lm(bwt ~ babysex + bhead + blength + delwt + fincome + 
+    gaweeks + mheight + mrace + parity + ppwt + smoken, data = bw_df)
 
 #check the results
 summary(fit)
@@ -60,7 +61,7 @@ bw_df %>%
        x = "Fitted Values",
        y = "Residuals")
 ```
-As shown in the plot, with fitted value below 2000 or above 4000, the residuals do not "bounce randomly" around the 0 line, suggesting that the data point in this range do not fall on the estimated regression line. This model is not optimal for data outside of the 2000-4000 range for fitted values. However, when fitted values are around 3000, many data points have residuals equals to 0, showing that they falls directly on the estimated regression line, and the model predictions are correct. 
+As shown in the plot, with fitted value below 2000 or above 4000, the residuals do not bounce randomly around the 0 line, suggesting that the data point in this range do not fall on the estimated regression line. This model is not optimal for data outside of the 2000-4000 range for fitted values and there are many outliers However, when fitted values are around 3000, many data points have residuals equals to 0 and they falls directly on the estimated regression line. 
 
 
 ## Compare the model with two others
